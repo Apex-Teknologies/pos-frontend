@@ -1,6 +1,7 @@
 'use client'
 import Sidebar from '@/components/layout/Sidebar'
 import Topbar from '@/components/layout/Topbar'
+import OfflineIndicator from '@/components/shared/OfflineIndicator'
 import { useAuthStore } from '@/lib/store/authStore'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
@@ -29,6 +30,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
       </div>
+      <OfflineIndicator />
     </div>
   )
 }

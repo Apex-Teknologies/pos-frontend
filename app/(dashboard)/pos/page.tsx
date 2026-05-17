@@ -1,5 +1,6 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { toast } from 'sonner'
 import { useInventoryStore } from '@/lib/store/inventoryStore'
 import { useCartStore } from '@/lib/store/cartStore'
 import { useAuthStore } from '@/lib/store/authStore'
@@ -11,7 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Search, Minus, Plus, Trash2, ShoppingCart, X } from 'lucide-react'
+import { Search, Minus, Plus, Trash2, ShoppingCart, X, Keyboard } from 'lucide-react'
 import CheckoutModal from '@/components/pos/CheckoutModal'
 import ReceiptModal from '@/components/pos/ReceiptModal'
 
@@ -26,8 +27,48 @@ export default function POSPage() {
   const [catFilter, setCatFilter] = useState('all')
   const [showCheckout, setShowCheckout] = useState(false)
   const [completedTxn, setCompletedTxn] = useState<Transaction | null>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  // Barcode scanner buffer — rapid keystrokes ending in Enter
+  const barcodeBuffer = useRef('')
+  const barcodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const TAX_RATE = 15
+
+  // Keyboard shortcuts
+  const handleGlobalKey = useCallback((e: KeyboardEvent) => {
+    // Don't fire when typing in inputs/textareas
+    const tag = (e.target as HTMLElement).tagName
+    const inInput = tag === 'INPUT' || tag === 'TEXTAREA'
+
+    if (e.key === 'F1') { e.preventDefault(); searchRef.current?.focus() }
+    if (e.key === 'F4') { e.preventDefault(); if (cart.items.length > 0) setShowCheckout(true) }
+    if (e.key === 'Escape' && !inInput) { cart.clearCart(); toast.info('Cart cleared') }
+
+    // Barcode scanner: rapid character input ending with Enter
+    if (!inInput) {
+      if (e.key === 'Enter' && barcodeBuffer.current.length >= 4) {
+        const barcode = barcodeBuffer.current
+        barcodeBuffer.current = ''
+        const product = products.find((p) => p.barcode === barcode)
+        if (product) {
+          cart.addItem(product)
+          toast.success(`Added: ${product.name}`)
+        } else {
+          toast.error(`Barcode not found: ${barcode}`)
+        }
+      } else if (e.key.length === 1) {
+        barcodeBuffer.current += e.key
+        if (barcodeTimer.current) clearTimeout(barcodeTimer.current)
+        barcodeTimer.current = setTimeout(() => { barcodeBuffer.current = '' }, 300)
+      }
+    }
+  }, [cart, products])
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleGlobalKey)
+    return () => window.removeEventListener('keydown', handleGlobalKey)
+  }, [handleGlobalKey])
 
   const filtered = products
     .filter((p) => p.isActive && p.stock > 0)
@@ -62,6 +103,7 @@ export default function POSPage() {
     cart.clearCart()
     setShowCheckout(false)
     setCompletedTxn(txn)
+    toast.success(`Payment received — ${txn.receiptNumber}`)
   }
 
   return (
@@ -70,10 +112,19 @@ export default function POSPage() {
       <div className="flex-1 flex flex-col min-h-0 space-y-3">
         {/* Search + category filter */}
         <div className="space-y-2 flex-shrink-0">
+          {/* Keyboard shortcuts hint */}
+          <div className="hidden lg:flex items-center gap-4 text-xs text-muted-foreground bg-slate-100 rounded-lg px-3 py-1.5">
+            <Keyboard size={13} />
+            <span><kbd className="font-mono bg-white border rounded px-1">F1</kbd> Search</span>
+            <span><kbd className="font-mono bg-white border rounded px-1">F4</kbd> Checkout</span>
+            <span><kbd className="font-mono bg-white border rounded px-1">ESC</kbd> Clear cart</span>
+            <span className="ml-auto text-slate-400">Barcode scanner ready</span>
+          </div>
           <div className="relative">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search products..."
+              ref={searchRef}
+              placeholder="Search products… (F1)"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
@@ -149,15 +200,17 @@ export default function POSPage() {
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
                 <button
-                  className="w-6 h-6 rounded border flex items-center justify-center hover:bg-slate-100"
+                  className="w-8 h-8 min-w-[32px] rounded border flex items-center justify-center hover:bg-slate-100 active:scale-95 transition-transform"
                   onClick={() => cart.updateQty(item.product.id, item.quantity - 1)}
+                  aria-label="Decrease quantity"
                 >
                   <Minus size={12} />
                 </button>
                 <span className="w-7 text-center text-sm font-medium">{item.quantity}</span>
                 <button
-                  className="w-6 h-6 rounded border flex items-center justify-center hover:bg-slate-100"
+                  className="w-8 h-8 min-w-[32px] rounded border flex items-center justify-center hover:bg-slate-100 active:scale-95 transition-transform"
                   onClick={() => cart.updateQty(item.product.id, item.quantity + 1)}
+                  aria-label="Increase quantity"
                 >
                   <Plus size={12} />
                 </button>
@@ -229,6 +282,23 @@ export default function POSPage() {
           transaction={completedTxn}
           onClose={() => setCompletedTxn(null)}
         />
+      )}
+
+      {/* Mobile sticky cart button — visible only on small screens when cart has items */}
+      {cart.items.length > 0 && (
+        <div className="lg:hidden fixed bottom-4 left-4 right-4 z-30">
+          <Button
+            className="w-full h-14 text-base gap-3 shadow-xl"
+            onClick={() => setShowCheckout(true)}
+          >
+            <ShoppingCart size={20} />
+            <span>Checkout</span>
+            <span className="ml-auto font-bold">{formatCurrency(cart.total(TAX_RATE))}</span>
+            <span className="bg-white/20 rounded-full px-2 py-0.5 text-sm">
+              {cart.items.reduce((s, i) => s + i.quantity, 0)} items
+            </span>
+          </Button>
+        </div>
       )}
     </div>
   )

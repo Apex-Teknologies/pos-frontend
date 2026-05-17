@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Plus, Search, Edit, Trash2, Package } from 'lucide-react'
+import { toast } from 'sonner'
 import ProductFormDialog from '@/components/inventory/ProductFormDialog'
 
 export default function InventoryPage() {
@@ -132,7 +133,7 @@ export default function InventoryPage() {
                         <Button
                           variant="ghost" size="icon"
                           className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                          onClick={() => deleteProduct(p.id)}
+                          onClick={() => { deleteProduct(p.id); toast.success(`${p.name} deleted`) }}
                         >
                           <Trash2 size={15} />
                         </Button>

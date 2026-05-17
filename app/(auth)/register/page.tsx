@@ -6,28 +6,38 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ShoppingCart, AlertCircle } from 'lucide-react'
+import { ShoppingCart, AlertCircle, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter()
   const login = useAuthStore((s) => s.login)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    if (form.password !== form.confirm) {
+      setError('Passwords do not match.')
+      return
+    }
+    if (form.password.length < 6) {
+      setError('Password must be at least 6 characters.')
+      return
+    }
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 400))
-    const ok = login(email, password)
+    await new Promise((r) => setTimeout(r, 500))
+    // In production this would call the registration API.
+    // For the mock, we log in as the admin user if email matches demo.
+    const ok = login(form.email, form.password)
     setLoading(false)
     if (ok) {
       router.push('/')
     } else {
-      setError('Invalid email or password. Try admin@apextek.com')
+      // Simulate successful registration redirect to login
+      router.push('/login?registered=1')
     }
   }
 
@@ -39,41 +49,59 @@ export default function LoginPage() {
             <ShoppingCart size={28} />
           </div>
           <h1 className="text-3xl font-bold tracking-tight">ApexTek POS</h1>
-          <p className="text-slate-400 text-sm">Sign in to your account</p>
+          <p className="text-slate-400 text-sm">Create your account</p>
         </div>
 
         <Card className="shadow-2xl border-slate-700 bg-slate-800/50 backdrop-blur">
           <CardHeader>
-            <CardTitle className="text-white text-xl">Welcome back</CardTitle>
-            <CardDescription className="text-slate-400">Enter your credentials to continue</CardDescription>
+            <CardTitle className="text-white text-xl">Get started</CardTitle>
+            <CardDescription className="text-slate-400">Fill in your details to register</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-slate-300" htmlFor="email">Email</Label>
+                <Label className="text-slate-300" htmlFor="name">Full Name</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@apextek.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="name"
+                  placeholder="Kwame Mensah"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
                   className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
                   required
                 />
               </div>
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-slate-300" htmlFor="password">Password</Label>
-                  <Link href="/forgot-password" className="text-xs text-blue-400 hover:underline">
-                    Forgot password?
-                  </Link>
-                </div>
+                <Label className="text-slate-300" htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@company.com"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-slate-300" htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Min. 6 characters"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-slate-300" htmlFor="confirm">Confirm Password</Label>
+                <Input
+                  id="confirm"
+                  type="password"
+                  placeholder="Repeat your password"
+                  value={form.confirm}
+                  onChange={(e) => setForm({ ...form, confirm: e.target.value })}
                   className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
                   required
                 />
@@ -87,27 +115,14 @@ export default function LoginPage() {
               )}
 
               <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={loading}>
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading ? 'Creating account...' : 'Create Account'}
               </Button>
 
               <p className="text-center text-sm text-slate-400">
-                Don&apos;t have an account?{' '}
-                <Link href="/register" className="text-blue-400 hover:underline">Register</Link>
+                Already have an account?{' '}
+                <Link href="/login" className="text-blue-400 hover:underline">Sign in</Link>
               </p>
-              <div className="text-center">
-                <Link href="/pin" className="text-blue-400 text-sm hover:underline">
-                  Cashier PIN Login →
-                </Link>
-              </div>
             </form>
-
-            <div className="mt-4 p-3 rounded-md bg-slate-700/50 text-slate-400 text-xs space-y-1">
-              <p className="font-medium text-slate-300">Demo accounts:</p>
-              <p>admin@apextek.com — Admin</p>
-              <p>manager@apextek.com — Manager</p>
-              <p>cashier@apextek.com — Cashier</p>
-              <p className="text-slate-500">(any password works)</p>
-            </div>
           </CardContent>
         </Card>
       </div>

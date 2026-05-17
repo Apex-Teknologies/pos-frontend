@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { useTransactionStore } from '@/lib/store/transactionStore'
 import { Transaction } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -109,7 +110,7 @@ export default function TransactionsPage() {
                           <Button
                             variant="ghost" size="icon"
                             className="text-orange-500 hover:text-orange-600 hover:bg-orange-50"
-                            onClick={() => refundTransaction(t.id)}
+                            onClick={() => { refundTransaction(t.id); toast.info('Transaction refunded') }}
                           >
                             <RotateCcw size={15} />
                           </Button>
