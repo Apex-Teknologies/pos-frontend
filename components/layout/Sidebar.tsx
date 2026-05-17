@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/lib/store/authStore'
 import { useInventoryStore } from '@/lib/store/inventoryStore'
+import { useNotificationStore } from '@/lib/store/notificationStore'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
@@ -16,6 +17,13 @@ import {
   Settings,
   LogOut,
   ShoppingBag,
+  Users,
+  FileText,
+  BarChart2,
+  Bell,
+  GitBranch,
+  HelpCircle,
+  CreditCard,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
@@ -27,13 +35,11 @@ interface NavItem {
   badge?: number
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function asNavItem(x: any): NavItem { return x }
-
 export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname()
   const { user, logout } = useAuthStore()
   const products = useInventoryStore((s) => s.products)
+  const unreadCount = useNotificationStore((s) => s.unreadCount())
   const lowStockCount = products.filter((p) => p.stock <= p.reorderPoint).length
 
   const navGroups = [
@@ -43,6 +49,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         { label: 'Dashboard', href: '/', icon: <LayoutDashboard size={18} /> },
         { label: 'POS / Checkout', href: '/pos', icon: <ShoppingCart size={18} /> },
         { label: 'Transactions', href: '/transactions', icon: <Receipt size={18} />, roles: ['admin', 'manager'] },
+        { label: 'Reports', href: '/reports', icon: <BarChart2 size={18} />, roles: ['admin', 'manager'] },
       ],
     },
     {
@@ -56,11 +63,29 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
       ],
     },
     {
+      label: 'CRM',
+      roles: ['admin', 'manager'],
+      items: [
+        { label: 'Customers', href: '/customers', icon: <Users size={18} /> },
+        { label: 'Invoices', href: '/invoices', icon: <FileText size={18} /> },
+      ],
+    },
+    {
       label: 'Business',
       roles: ['admin'],
       items: [
         { label: 'Business Profile', href: '/business', icon: <Building2 size={18} /> },
+        { label: 'Branches', href: '/branches', icon: <GitBranch size={18} /> },
+        { label: 'Users', href: '/users', icon: <Users size={18} /> },
+        { label: 'Payment Integrations', href: '/payment-integrations', icon: <CreditCard size={18} /> },
         { label: 'Settings', href: '/settings', icon: <Settings size={18} /> },
+      ],
+    },
+    {
+      label: 'General',
+      items: [
+        { label: 'Notifications', href: '/notifications', icon: <Bell size={18} />, badge: unreadCount },
+        { label: 'Help & Support', href: '/help', icon: <HelpCircle size={18} /> },
       ],
     },
   ]
@@ -92,7 +117,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
               </p>
               <ul className="space-y-0.5">
                 {group.items.map((item) => {
-                  if ((item as any).roles && user && !(item as any).roles.includes(user.role)) return null
+                  if ((item as NavItem).roles && user && !(item as NavItem).roles!.includes(user.role)) return null
                   const active = isActive(item.href)
                   return (
                     <li key={item.href}>

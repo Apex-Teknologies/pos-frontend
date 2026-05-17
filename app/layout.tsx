@@ -14,8 +14,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ApexTek POS",
-  description: "Smart Point of Sale System by ApexTek",
+  title: { default: 'ApexTek POS', template: '%s | ApexTek POS' },
+  description: 'Smart Point of Sale System by ApexTek — inventory, sales, customers, and analytics in one place.',
+  keywords: ['POS', 'point of sale', 'inventory', 'sales', 'retail', 'ApexTek'],
+  authors: [{ name: 'ApexTek' }],
+  manifest: '/manifest.json',
+  themeColor: '#3b82f6',
+  viewport: { width: 'device-width', initialScale: 1, maximumScale: 1 },
+  icons: { icon: '/icon-192.png', apple: '/icon-192.png' },
+  openGraph: {
+    title: 'ApexTek POS',
+    description: 'Smart Point of Sale System',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({

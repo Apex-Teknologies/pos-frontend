@@ -108,6 +108,54 @@ export interface Transaction {
   receiptNumber: string
 }
 
+export interface Customer {
+  id: string
+  name: string
+  email: string
+  phone: string
+  address?: string
+  loyaltyPoints: number
+  walletBalance: number
+  totalSpent: number
+  totalOrders: number
+  createdAt: string
+  notes?: string
+}
+
+export interface Invoice {
+  id: string
+  invoiceNumber: string
+  customerId?: string
+  customerName: string
+  customerEmail?: string
+  items: InvoiceItem[]
+  subtotal: number
+  taxAmount: number
+  discountAmount: number
+  total: number
+  dueDate: string
+  status: 'draft' | 'sent' | 'paid' | 'overdue'
+  createdAt: string
+  notes?: string
+}
+
+export interface InvoiceItem {
+  description: string
+  quantity: number
+  unitPrice: number
+  total: number
+}
+
+export interface Notification {
+  id: string
+  title: string
+  message: string
+  type: 'info' | 'warning' | 'success' | 'error'
+  read: boolean
+  createdAt: string
+  link?: string
+}
+
 export interface StockMovement {
   id: string
   productId: string

@@ -2,6 +2,8 @@
 import Sidebar from '@/components/layout/Sidebar'
 import Topbar from '@/components/layout/Topbar'
 import OfflineIndicator from '@/components/shared/OfflineIndicator'
+import KeyboardShortcutsModal from '@/components/shared/KeyboardShortcutsModal'
+import SkipToMain from '@/components/shared/SkipToMain'
 import { useAuthStore } from '@/lib/store/authStore'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
@@ -18,6 +20,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
+      <SkipToMain />
       {/* Sidebar — hidden on mobile */}
       <div className="hidden lg:flex lg:flex-shrink-0">
         <Sidebar />
@@ -26,11 +29,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Main content */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <Topbar />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main id="main-content" className="flex-1 overflow-y-auto p-4 md:p-6">
           {children}
         </main>
       </div>
       <OfflineIndicator />
+      <KeyboardShortcutsModal />
     </div>
   )
 }

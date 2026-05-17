@@ -6,19 +6,24 @@ import { mockUsers } from '@/lib/mock/business'
 
 interface AuthState {
   user: User | null
+  users: User[]
   isAuthenticated: boolean
   login: (email: string, password: string) => boolean
   loginWithPin: (pin: string) => boolean
   logout: () => void
+  addUser: (u: User) => void
+  updateUser: (u: User) => void
+  deleteUser: (id: string) => void
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
+      users: mockUsers,
       isAuthenticated: false,
       login: (email: string, _password: string) => {
-        const found = mockUsers.find((u) => u.email === email)
+        const found = get().users.find((u) => u.email === email)
         if (found) {
           set({ user: found, isAuthenticated: true })
           return true
@@ -26,7 +31,7 @@ export const useAuthStore = create<AuthState>()(
         return false
       },
       loginWithPin: (pin: string) => {
-        const found = mockUsers.find((u) => u.pin === pin)
+        const found = get().users.find((u) => u.pin === pin)
         if (found) {
           set({ user: found, isAuthenticated: true })
           return true
@@ -34,6 +39,9 @@ export const useAuthStore = create<AuthState>()(
         return false
       },
       logout: () => set({ user: null, isAuthenticated: false }),
+      addUser: (u) => set({ users: [...get().users, u] }),
+      updateUser: (u) => set({ users: get().users.map((x) => (x.id === u.id ? u : x)) }),
+      deleteUser: (id) => set({ users: get().users.filter((x) => x.id !== id) }),
     }),
     { name: 'apextek-auth' }
   )
