@@ -12,7 +12,7 @@ export function middleware(request: NextRequest) {
   }
 
   try {
-    const parsed = JSON.parse(auth.value)
+    const parsed = JSON.parse(decodeURIComponent(auth.value))
     if (!parsed?.state?.isAuthenticated) {
       return NextResponse.redirect(new URL('/login', request.url))
     }

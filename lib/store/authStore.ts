@@ -26,6 +26,10 @@ export const useAuthStore = create<AuthState>()(
         const found = get().users.find((u) => u.email === email)
         if (found) {
           set({ user: found, isAuthenticated: true })
+          // Sync a cookie so the middleware can verify auth (localStorage isn't readable by middleware)
+          if (typeof document !== 'undefined') {
+            document.cookie = `apextek-auth=${encodeURIComponent(JSON.stringify({ state: { isAuthenticated: true } }))}; path=/; max-age=604800; SameSite=Lax`
+          }
           return true
         }
         return false
@@ -34,11 +38,19 @@ export const useAuthStore = create<AuthState>()(
         const found = get().users.find((u) => u.pin === pin)
         if (found) {
           set({ user: found, isAuthenticated: true })
+          if (typeof document !== 'undefined') {
+            document.cookie = `apextek-auth=${encodeURIComponent(JSON.stringify({ state: { isAuthenticated: true } }))}; path=/; max-age=604800; SameSite=Lax`
+          }
           return true
         }
         return false
       },
-      logout: () => set({ user: null, isAuthenticated: false }),
+      logout: () => {
+        set({ user: null, isAuthenticated: false })
+        if (typeof document !== 'undefined') {
+          document.cookie = 'apextek-auth=; path=/; max-age=0'
+        }
+      },
       addUser: (u) => set({ users: [...get().users, u] }),
       updateUser: (u) => set({ users: get().users.map((x) => (x.id === u.id ? u : x)) }),
       deleteUser: (id) => set({ users: get().users.filter((x) => x.id !== id) }),
