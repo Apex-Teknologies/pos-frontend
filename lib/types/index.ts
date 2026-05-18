@@ -95,6 +95,7 @@ export interface Transaction {
   branchId: string
   cashierId: string
   cashierName: string
+  customerId?: string
   items: CartItem[]
   subtotal: number
   taxAmount: number

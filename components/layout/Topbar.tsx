@@ -5,6 +5,7 @@ import { useBranchStore } from '@/lib/store/branchStore'
 import { useAuthStore } from '@/lib/store/authStore'
 import { useNotificationStore } from '@/lib/store/notificationStore'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,8 +22,9 @@ import GlobalSearch from '@/components/shared/GlobalSearch'
 export default function Topbar() {
   const { currentBranch, branches, setBranch } = useBranchStore()
   const { user, logout } = useAuthStore()
-  const unreadCount = useNotificationStore((s) => s.unreadCount())
+  const unreadCount = useNotificationStore((s) => s.notifications.filter((n) => !n.read).length)
   const [searchOpen, setSearchOpen] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -33,7 +35,7 @@ export default function Topbar() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }, [setSearchOpen])
 
   return (
     <>
@@ -118,12 +120,12 @@ export default function Topbar() {
               <p className="text-xs text-muted-foreground font-normal capitalize">{user?.role}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => window.location.href = '/settings'}>Settings</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => window.location.href = '/help'}>Help</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/settings')}>Settings</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/help')}>Help</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-red-600"
-              onClick={() => { logout(); window.location.href = '/login' }}
+              onClick={() => { logout(); router.push('/login') }}
             >
               Sign out
             </DropdownMenuItem>

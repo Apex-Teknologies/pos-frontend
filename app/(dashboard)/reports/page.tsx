@@ -21,7 +21,7 @@ export default function ReportsPage() {
   const [range, setRange] = useState<Range>('7d')
 
   const filtered = useMemo(() => {
-    if (range === 'all') return transactions
+    if (range === 'all') return transactions.filter((t) => t.status === 'completed')
     const days = range === '7d' ? 7 : 30
     const cutoff = new Date(Date.now() - days * 86400000).toISOString()
     return transactions.filter((t) => t.createdAt >= cutoff && t.status === 'completed')
@@ -51,11 +51,11 @@ export default function ReportsPage() {
 
   // Top products
   const topProducts = useMemo(() => {
-    const map: Record<string, { name: string; qty: number; revenue: number }> = {}
+    const map: Record<string, { id: string; name: string; qty: number; revenue: number }> = {}
     filtered.forEach((t) =>
       t.items.forEach((item) => {
         const id = item.product.id
-        if (!map[id]) map[id] = { name: item.product.name, qty: 0, revenue: 0 }
+        if (!map[id]) map[id] = { id, name: item.product.name, qty: 0, revenue: 0 }
         map[id].qty += item.quantity
         map[id].revenue += item.product.price * item.quantity
       })
@@ -163,7 +163,7 @@ export default function ReportsPage() {
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie data={paymentBreakdown} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label>
-                  {paymentBreakdown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  {paymentBreakdown.map((entry, i) => <Cell key={entry.name} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
                 <Legend />
                 <Tooltip formatter={(v) => [formatCurrency(v as number)]} />
@@ -182,7 +182,7 @@ export default function ReportsPage() {
           ) : (
             <div className="space-y-3">
               {topProducts.map((p, i) => (
-                <div key={p.name} className="flex items-center gap-3">
+                <div key={p.id} className="flex items-center gap-3">
                   <span className="w-6 text-xs font-bold text-muted-foreground">#{i + 1}</span>
                   <div className="flex-1">
                     <p className="text-sm font-medium">{p.name}</p>

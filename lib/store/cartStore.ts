@@ -1,4 +1,3 @@
-'use client'
 import { create } from 'zustand'
 import { CartItem, Product } from '@/lib/types'
 
@@ -48,6 +47,9 @@ export const useCartStore = create<CartState>((set, get) => ({
   clearCart: () => set({ items: [], discount: 0 }),
   subtotal: () =>
     get().items.reduce((sum, i) => sum + i.product.price * i.quantity - i.discount, 0),
-  taxAmount: (rate) => get().subtotal() * (rate / 100),
-  total: (rate) => get().subtotal() + get().taxAmount(rate) - get().discount,
+  taxAmount: (rate) => (get().subtotal() - get().discount) * (rate / 100),
+  total: (rate) => {
+    const discounted = get().subtotal() - get().discount
+    return discounted + discounted * (rate / 100)
+  },
 }))

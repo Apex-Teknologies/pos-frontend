@@ -18,7 +18,10 @@ const roleBadge: Record<Role, string> = {
 }
 
 export default function UsersPage() {
-  const { users, user: currentUser, addUser, updateUser, deleteUser } = useAuthStore()
+  const { users, user: currentUser } = useAuthStore()
+  const addUser = useAuthStore((s) => s.addUser)
+  const updateUser = useAuthStore((s) => s.updateUser)
+  const deleteUser = useAuthStore((s) => s.deleteUser)
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<User | null>(null)
   const [showPin, setShowPin] = useState(false)
@@ -38,10 +41,10 @@ export default function UsersPage() {
   const save = () => {
     if (!form.name || !form.email) return toast.error('Name and email are required')
     if (editing) {
-      updateUser?.({ ...editing, ...form })
+      updateUser({ ...editing, ...form })
       toast.success('User updated')
     } else {
-      addUser?.({ id: `user-${Date.now()}`, ...form })
+      addUser({ id: `user-${Date.now()}`, ...form })
       toast.success('User added')
     }
     setOpen(false)
@@ -102,7 +105,7 @@ export default function UsersPage() {
                     variant="ghost"
                     size="icon"
                     className="text-red-500 hover:bg-red-50"
-                    onClick={() => { deleteUser?.(u.id); toast.success('User deleted') }}
+                    onClick={() => { deleteUser(u.id); toast.success('User deleted') }}
                   >
                     <Trash2 size={14} />
                   </Button>

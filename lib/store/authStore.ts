@@ -1,4 +1,3 @@
-'use client'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { User, Role } from '@/lib/types'
@@ -22,6 +21,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       users: mockUsers,
       isAuthenticated: false,
+      // Mock auth — password not validated in frontend store (dev mode only)
       login: (email: string, _password: string) => {
         const found = get().users.find((u) => u.email === email)
         if (found) {

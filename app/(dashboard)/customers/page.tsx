@@ -26,7 +26,7 @@ export default function CustomersPage() {
   const filtered = customers.filter(
     (c) =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.email.toLowerCase().includes(search.toLowerCase()) ||
+      (c.email ?? '').toLowerCase().includes(search.toLowerCase()) ||
       c.phone.includes(search)
   )
 
@@ -45,7 +45,7 @@ export default function CustomersPage() {
     setOpen(false)
   }
 
-  const customerTxns = (id: string) => transactions.filter((t) => t.cashierId === id || t.id.includes(id.slice(-3)))
+  const customerTxns = (id: string) => transactions.filter((t) => t.customerId === id)
 
   return (
     <div className="space-y-5">
@@ -164,7 +164,21 @@ export default function CustomersPage() {
                 <p className="text-xs text-muted-foreground">Member since {formatDate(viewing.createdAt)}</p>
               </TabsContent>
               <TabsContent value="history" className="pt-3">
-                <p className="text-sm text-muted-foreground text-center py-8">Purchase history linked to customer account once backend is connected.</p>
+                {customerTxns(viewing.id).length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">No transactions found for this customer.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {customerTxns(viewing.id).map((t) => (
+                      <div key={t.id} className="flex items-center justify-between text-sm border rounded-lg px-3 py-2">
+                        <div>
+                          <p className="font-medium">{t.receiptNumber}</p>
+                          <p className="text-xs text-muted-foreground">{t.createdAt.slice(0, 10)} · {t.paymentMethod.replace('_', ' ')}</p>
+                        </div>
+                        <span className="font-semibold">{formatCurrency(t.total)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </DialogContent>

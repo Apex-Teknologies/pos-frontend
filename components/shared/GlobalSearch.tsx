@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useInventoryStore } from '@/lib/store/inventoryStore'
 import { useCustomerStore } from '@/lib/store/customerStore'
@@ -7,8 +7,7 @@ import { useTransactionStore } from '@/lib/store/transactionStore'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Search, Package, Users, Receipt, BarChart2, Settings, FileText } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { formatCurrency } from '@/lib/utils'
+import { cn, formatCurrency } from '@/lib/utils'
 
 interface SearchResult {
   id: string
@@ -59,10 +58,10 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
     ...PAGES.filter((p) => p.label.toLowerCase().includes(query.toLowerCase())),
   ]
 
-  const navigate = (r: SearchResult) => {
+  const navigate = useCallback((r: SearchResult) => {
     router.push(r.href)
     onClose()
-  }
+  }, [router, onClose])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -73,7 +72,7 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [open, results, selected])
+  }, [open, results, selected, navigate])
 
   const typeLabel: Record<string, string> = { product: 'Product', customer: 'Customer', transaction: 'Transaction', page: 'Page' }
 
