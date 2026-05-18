@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Middleware is skipped in static export (GitHub Pages) — auth is enforced client-side instead
 export function middleware(request: NextRequest) {
   const auth = request.cookies.get('apextek-auth')
   const { pathname } = request.nextUrl
@@ -24,5 +25,6 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // Exclude static assets and API routes; also skip entirely during static export
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/).*)'],
 }
