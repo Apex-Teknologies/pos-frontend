@@ -4,6 +4,7 @@ import { User, Role } from '@/lib/types'
 import { mockUsers } from '@/lib/mock/business'
 
 interface AuthState {
+  _hydrated: boolean
   user: User | null
   users: User[]
   isAuthenticated: boolean
@@ -15,9 +16,19 @@ interface AuthState {
   deleteUser: (id: string) => void
 }
 
+const setAuthCookie = (authenticated: boolean) => {
+  if (typeof document === 'undefined') return
+  if (authenticated) {
+    document.cookie = `apextek-auth=${encodeURIComponent(JSON.stringify({ state: { isAuthenticated: true } }))}; path=/; max-age=604800; SameSite=Lax`
+  } else {
+    document.cookie = 'apextek-auth=; path=/; max-age=0'
+  }
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
+      _hydrated: false,
       user: null,
       users: mockUsers,
       isAuthenticated: false,
@@ -26,10 +37,7 @@ export const useAuthStore = create<AuthState>()(
         const found = get().users.find((u) => u.email === email)
         if (found) {
           set({ user: found, isAuthenticated: true })
-          // Sync a cookie so the middleware can verify auth (localStorage isn't readable by middleware)
-          if (typeof document !== 'undefined') {
-            document.cookie = `apextek-auth=${encodeURIComponent(JSON.stringify({ state: { isAuthenticated: true } }))}; path=/; max-age=604800; SameSite=Lax`
-          }
+          setAuthCookie(true)
           return true
         }
         return false
@@ -38,24 +46,26 @@ export const useAuthStore = create<AuthState>()(
         const found = get().users.find((u) => u.pin === pin)
         if (found) {
           set({ user: found, isAuthenticated: true })
-          if (typeof document !== 'undefined') {
-            document.cookie = `apextek-auth=${encodeURIComponent(JSON.stringify({ state: { isAuthenticated: true } }))}; path=/; max-age=604800; SameSite=Lax`
-          }
+          setAuthCookie(true)
           return true
         }
         return false
       },
       logout: () => {
         set({ user: null, isAuthenticated: false })
-        if (typeof document !== 'undefined') {
-          document.cookie = 'apextek-auth=; path=/; max-age=0'
-        }
+        setAuthCookie(false)
       },
       addUser: (u) => set({ users: [...get().users, u] }),
       updateUser: (u) => set({ users: get().users.map((x) => (x.id === u.id ? u : x)) }),
       deleteUser: (id) => set({ users: get().users.filter((x) => x.id !== id) }),
     }),
-    { name: 'apextek-auth' }
+    {
+      name: 'apextek-auth',
+      // Mark the store as hydrated once localStorage data is loaded
+      onRehydrateStorage: () => (state) => {
+        if (state) state._hydrated = true
+      },
+    }
   )
 )
 

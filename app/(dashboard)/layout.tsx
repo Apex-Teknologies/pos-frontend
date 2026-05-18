@@ -10,12 +10,18 @@ import { useEffect } from 'react'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const _hydrated = useAuthStore((s) => s._hydrated)
   const router = useRouter()
 
   useEffect(() => {
-    if (!isAuthenticated) router.replace('/login')
-  }, [isAuthenticated, router])
+    // Only redirect after the store has loaded from localStorage.
+    // Without this guard, the default isAuthenticated=false fires before
+    // the persisted value is read, bouncing the user back to /login.
+    if (_hydrated && !isAuthenticated) router.replace('/login')
+  }, [_hydrated, isAuthenticated, router])
 
+  // Show nothing while waiting for localStorage to load
+  if (!_hydrated) return null
   if (!isAuthenticated) return null
 
   return (
