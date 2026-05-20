@@ -4,7 +4,6 @@ import { User, Role } from '@/lib/types'
 import { mockUsers } from '@/lib/mock/business'
 
 interface AuthState {
-  _hydrated: boolean
   user: User | null
   users: User[]
   isAuthenticated: boolean
@@ -28,7 +27,6 @@ const setAuthCookie = (authenticated: boolean) => {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      _hydrated: false,
       user: null,
       users: mockUsers,
       isAuthenticated: false,
@@ -59,13 +57,7 @@ export const useAuthStore = create<AuthState>()(
       updateUser: (u) => set({ users: get().users.map((x) => (x.id === u.id ? u : x)) }),
       deleteUser: (id) => set({ users: get().users.filter((x) => x.id !== id) }),
     }),
-    {
-      name: 'apextek-auth',
-      // Mark the store as hydrated once localStorage data is loaded
-      onRehydrateStorage: () => (state) => {
-        if (state) state._hydrated = true
-      },
-    }
+    { name: 'apextek-auth' }
   )
 )
 

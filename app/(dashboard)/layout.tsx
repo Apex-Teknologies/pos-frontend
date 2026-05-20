@@ -1,4 +1,5 @@
 'use client'
+import { useState, useEffect } from 'react'
 import Sidebar from '@/components/layout/Sidebar'
 import Topbar from '@/components/layout/Topbar'
 import OfflineIndicator from '@/components/shared/OfflineIndicator'
@@ -6,22 +7,28 @@ import KeyboardShortcutsModal from '@/components/shared/KeyboardShortcutsModal'
 import SkipToMain from '@/components/shared/SkipToMain'
 import { useAuthStore } from '@/lib/store/authStore'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-  const _hydrated = useAuthStore((s) => s._hydrated)
   const router = useRouter()
+  // Zustand persist rehydrates from localStorage asynchronously after mount.
+  // We must wait for mount before reading auth state — otherwise the default
+  // isAuthenticated=false fires before the saved value is loaded, sending
+  // the user back to /login immediately after a successful login.
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // Only redirect after the store has loaded from localStorage.
-    // Without this guard, the default isAuthenticated=false fires before
-    // the persisted value is read, bouncing the user back to /login.
-    if (_hydrated && !isAuthenticated) router.replace('/login')
-  }, [_hydrated, isAuthenticated, router])
+    setMounted(true)
+  }, [])
 
-  // Show nothing while waiting for localStorage to load
-  if (!_hydrated) return null
+  useEffect(() => {
+    if (mounted && !isAuthenticated) {
+      router.replace('/login')
+    }
+  }, [mounted, isAuthenticated, router])
+
+  // Blank screen while waiting for localStorage — avoids flash of redirect
+  if (!mounted) return null
   if (!isAuthenticated) return null
 
   return (

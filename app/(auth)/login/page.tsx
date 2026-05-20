@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store/authStore'
 import { Button } from '@/components/ui/button'
@@ -12,10 +12,23 @@ import Link from 'next/link'
 export default function LoginPage() {
   const router = useRouter()
   const login = useAuthStore((s) => s.login)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Redirect already-logged-in users straight to dashboard
+  useEffect(() => {
+    if (mounted && isAuthenticated) {
+      router.replace('/')
+    }
+  }, [mounted, isAuthenticated, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -86,9 +99,13 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={loading}>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full h-10 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium transition-colors"
+              >
                 {loading ? 'Signing in...' : 'Sign In'}
-              </Button>
+              </button>
 
               <p className="text-center text-sm text-slate-400">
                 Don&apos;t have an account?{' '}
